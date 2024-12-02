@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Search</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: auto;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #results-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .movie {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 200px;
+            text-align: left;
+            padding: 10px;
+        }
+
+        .movie img {
+            width: 100%;
+            height: auto;
+        }
+
+        .movie h2 {
+            font-size: 18px;
+            margin: 10px 0 5px;
+        }
+
+        .movie p {
+            font-size: 14px;
+            margin: 0;
+            color: #555;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>Movie Search</h1>
+        <form id="search-form">
+            <input type="text" id="search-input" placeholder="Search for movies..." required>
+            <button type="submit">Search</button>
+        </form>
+        <div id="results-container"></div>
+    </div>
+
+
+    <script>
+        // Function to fetch movie details using XMLHttpRequest
+        function fetchMovieDetails(query, callback) {
+            const apiKey = 'be154bf3'; // Your OMDB API key
+            const url = `http://www.omdbapi.com/?s=${encodeURIComponent(query)}&apikey=${apiKey}&type=movie`;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.Response === 'True') {
+                        callback(null, data);
+                    } else {
+                        callback(new Error(data.Error), null);
+                    }
+                } else {
+                    callback(new Error('Failed to load data'), null);
+                }
+            };
+
+            xhr.onerror = function () {
+                callback(new Error('Network error'), null);
+            };
+
+            xhr.send();
+        }
+
+        // Example usage of the function
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchForm = document.getElementById('search-form');
+            const searchInput = document.getElementById('search-input');
+            const resultsContainer = document.getElementById('results-container');
+
+            searchForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const query = searchInput.value.trim();
+                if (query) {
+                    fetchMovieDetails(query, function (error, data) {
+                        if (error) {
+                            console.error('Error:', error);
+                            resultsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
+                        } else {
+                            displayMovieDetails(data);
+                        }
+                    });
+                }
+            });
+
+            function displayMovieDetails(data) {
+                if (data && data.Search) {
+                    resultsContainer.innerHTML = data.Search.map(movie => `
+                <div class="movie">
+                    <h2>${movie.Title}</h2>
+                    <p><strong>Year:</strong> ${movie.Year}</p>
+                    <img src="${movie.Poster}" alt="${movie.Title} Poster" />
+                </div>
+            `).join('');
+                } else {
+                    resultsContainer.innerHTML = '<p>No movies found.</p>';
+                }
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>
